@@ -8,7 +8,7 @@ import type {
   OfflineAction,
   OfflineState,
   ResultAction,
-  Config
+  Config,
 } from './types';
 import {
   OFFLINE_STATUS_CHANGED,
@@ -16,7 +16,7 @@ import {
   OFFLINE_COMPLETE_RETRY,
   OFFLINE_BUSY,
   RESET_STATE,
-  PERSIST_REHYDRATE
+  PERSIST_REHYDRATE,
 } from './constants';
 
 export const initialState: OfflineState = {
@@ -28,8 +28,8 @@ export const initialState: OfflineState = {
   retryScheduled: false,
   netInfo: {
     isConnectionExpensive: null,
-    reach: 'NONE'
-  }
+    reach: 'NONE',
+  },
 };
 
 type Dequeue = $PropertyType<$PropertyType<Config, 'queue'>, 'dequeue'>;
@@ -42,18 +42,20 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
       | OfflineStatusChangeAction
       | OfflineScheduleRetryAction
       | ResultAction
-      | PersistRehydrateAction
+      | PersistRehydrateAction,
   ): OfflineState {
     // Update online/offline status
     if (action.type === OFFLINE_STATUS_CHANGED && !action.meta) {
       return {
         ...state,
         online: action.payload.online,
-        netInfo: action.payload.netInfo
+        netInfo: action.payload.netInfo,
       };
     }
 
     if (action.type === PERSIST_REHYDRATE && action.payload) {
+      console.log('[action]', action);
+      console.log('[state]', state);
       return {
         ...state,
         ...(action.payload.offline || {}),
@@ -61,7 +63,7 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
         netInfo: state.netInfo,
         retryScheduled: initialState.retryScheduled,
         retryCount: initialState.retryCount,
-        busy: initialState.busy
+        busy: initialState.busy,
       };
     }
 
@@ -69,7 +71,7 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
       return {
         ...state,
         retryScheduled: true,
-        retryCount: state.retryCount + 1
+        retryCount: state.retryCount + 1,
       };
     }
 
@@ -91,13 +93,13 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
       const transaction = state.lastTransaction + 1;
       const stamped = (({
         ...action,
-        meta: { ...action.meta, transaction }
+        meta: { ...action.meta, transaction },
       }: any): OfflineAction);
       const offline = state;
       return {
         ...state,
         lastTransaction: transaction,
-        outbox: enqueue(offline.outbox, stamped, { offline })
+        outbox: enqueue(offline.outbox, stamped, { offline }),
       };
     }
 
@@ -107,7 +109,7 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
       return {
         ...state,
         outbox: dequeue(offline.outbox, action, { offline }),
-        retryCount: 0
+        retryCount: 0,
       };
     }
 
@@ -115,7 +117,7 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
       return {
         ...initialState,
         online: state.online,
-        netInfo: state.netInfo
+        netInfo: state.netInfo,
       };
     }
 
